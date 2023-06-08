@@ -17,11 +17,11 @@ class SortedArray<T extends Comparable<T>> implements Comparator<T>, Iterable<T>
     this.maxSize = size;
   }
 
-  static SortedArray<String> fromFile(int maxSize, String fileName) {
-    SortedArray<String> sa = new SortedArray<String>(maxSize);
+  static SortedArray<Integer> fromFile(int maxSize, String fileName) {
+    SortedArray<Integer> sa = new SortedArray<Integer>(maxSize);
     Iterator<String> lines = Utils.lines(fileName);
     while (lines.hasNext()) {
-      sa.add(lines.next());
+      sa.add(lines.next().hashCode());
     }
     return sa;
   }
@@ -134,7 +134,7 @@ class FileStream implements Iterator<String> {
 
 public class Minhash {
 
-  static final int signatureSize = 500;
+  static final int signatureSize = 400;
 
   public double jaccard(String fA, String fB) {
 
@@ -143,8 +143,8 @@ public class Minhash {
      * fB: Name of second file
      */
 
-    HashSet<String> sa = SortedArray.fromFile(signatureSize, fA).asSet();
-    HashSet<String> sb = SortedArray.fromFile(signatureSize, fB).asSet();
+    HashSet<Integer> sa = SortedArray.fromFile(signatureSize, fA).asSet();
+    HashSet<Integer> sb = SortedArray.fromFile(signatureSize, fB).asSet();
     int intersection = Utils.intersection(sa, sb).size();
     int union = sa.size() + sb.size() - intersection;
 
