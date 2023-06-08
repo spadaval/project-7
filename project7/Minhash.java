@@ -7,6 +7,45 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Scanner;
 
+/**
+ * A really simple iterator/iterable that returns lines from a file.
+ * 
+ * There really should be a built-in way to do this, but the Java standard
+ * libraries leave much to be desired.
+ */
+class FileStream implements Iterator<String>, Iterable<String> {
+  Scanner sc;
+  String fileName;
+
+  FileStream(String fileName) {
+    this.fileName = fileName;
+  }
+
+  @Override
+  public boolean hasNext() {
+    return sc.hasNext();
+  }
+
+  @Override
+  public String next() {
+    return sc.next();
+  }
+
+  @Override
+  public Iterator<String> iterator() {
+    try {
+      sc = new Scanner(new File(fileName));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return this;
+  }
+}
+/**
+ * A bounded sorted array.
+ * 
+ * Evicts the largest item when full. 
+ */
 class SortedArray<T extends Comparable<T>> implements Comparator<T>, Iterable<T> {
 
   ArrayList<T> buffer;
@@ -19,9 +58,9 @@ class SortedArray<T extends Comparable<T>> implements Comparator<T>, Iterable<T>
 
   static SortedArray<Integer> fromFile(int maxSize, String fileName) {
     SortedArray<Integer> sa = new SortedArray<Integer>(maxSize);
-    Iterator<String> lines = Utils.lines(fileName);
-    while (lines.hasNext()) {
-      sa.add(lines.next().hashCode());
+
+    for (String line : new FileStream(fileName)) {
+      sa.add(line.hashCode());
     }
     return sa;
   }
@@ -38,6 +77,15 @@ class SortedArray<T extends Comparable<T>> implements Comparator<T>, Iterable<T>
     return getSortedIndex(value, 0, buffer.size());
   }
 
+  /**
+   * Find the index to insert the value at.
+   * 
+   * Quick-select, esentially.
+   * @param value
+   * @param start
+   * @param end
+   * @return The index to insert the value at. 
+   */
   int getSortedIndex(T value, int start, int end) {
     // switch to simple comparisons when scanning through a small enough region of
     // the list
@@ -57,6 +105,10 @@ class SortedArray<T extends Comparable<T>> implements Comparator<T>, Iterable<T>
     }
   }
 
+  /**
+   * Add a value to the list. Evicts the largest value if the buffer is full.
+   * @param value
+   */
   public void add(T value) {
     // if the buffer is full, the last value is too large and we need to remove it
     if (buffer.size() == maxSize) {
@@ -92,19 +144,7 @@ class SortedArray<T extends Comparable<T>> implements Comparator<T>, Iterable<T>
   }
 }
 
-class Utils {
-  static Iterator<String> lines(String fileName) {
-    Scanner scanner = null;
-    try {
-      scanner = new Scanner(new File(fileName));
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    if (scanner == null)
-      return null;
-    return new FileStream(scanner);
-  }
-
+class Sets {
   static <T> HashSet<T> intersection(HashSet<T> a, HashSet<T> b) {
     HashSet<T> intersection = new HashSet<T>(a);
     intersection.retainAll(b);
@@ -112,40 +152,16 @@ class Utils {
   }
 }
 
-class FileStream implements Iterator<String> {
 
-  Scanner sc;
-
-  FileStream(Scanner sc) {
-    this.sc = sc;
-  }
-
-  @Override
-  public boolean hasNext() {
-    return sc.hasNext();
-  }
-
-  @Override
-  public String next() {
-    return sc.next();
-  }
-
-}
 
 public class Minhash {
 
   static final int signatureSize = 400;
 
   public double jaccard(String fA, String fB) {
-
-    /**
-     * fA: Name of first file
-     * fB: Name of second file
-     */
-
     HashSet<Integer> sa = SortedArray.fromFile(signatureSize, fA).asSet();
     HashSet<Integer> sb = SortedArray.fromFile(signatureSize, fB).asSet();
-    int intersection = Utils.intersection(sa, sb).size();
+    int intersection = Sets.intersection(sa, sb).size();
     int union = sa.size() + sb.size() - intersection;
 
     return intersection / (double) union;
